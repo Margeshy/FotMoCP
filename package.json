@@ -1,0 +1,17 @@
+{
+  "name": "fotmob-mcp",
+  "version": "0.1.0",
+  "description": "Lightweight FotMob match-data MCP server for football analysis agents",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node --check src/fotmob.js && node --check src/index.js && node scripts/build.mjs",
+    "check": "npm test && npm run build",
+    "start": "node dist/index.js",
+    "dev": "node src/index.js",
+    "test": "node --test test/*.test.js"
+  }
+}
