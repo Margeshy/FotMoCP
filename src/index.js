@@ -37,7 +37,7 @@ const teamData = (teamId) => fotmobRequest(`/teams?id=${positiveInteger(teamId, 
 const tools = [
   {
     name: "search_fotmob",
-    description: "Find compact FotMob team, player, league, and match IDs by name.",
+    description: "Search names and get FotMob IDs for teams, players, leagues, and matches.",
     inputSchema: schema({ query: { type: "string", minLength: 2 } }, ["query"]),
     async run({ query }) {
       if (typeof query !== "string" || query.trim().length < 2) throw new Error("query must contain at least 2 characters");
@@ -46,7 +46,7 @@ const tools = [
   },
   {
     name: "find_matches",
-    description: "Find FotMob matches scheduled or played on a UTC date. Use this before match tools when you need a match ID.",
+    description: "List FotMob matches on a UTC date. Use it when you do not have a match ID.",
     inputSchema: schema({ date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" } }, ["date"]),
     async run({ date }) {
       if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error("date must use YYYY-MM-DD");
@@ -56,31 +56,31 @@ const tools = [
   },
   {
     name: "get_team_season_profile",
-    description: "Return season table position, results, xG, xGA, xPoints, and FIFA ranking when FotMob provides them.",
+    description: "Get a team's table record, xG, xGA, xPoints, and FIFA ranking when present.",
     inputSchema: schema({ teamId: integer }, ["teamId"]),
     async run({ teamId }) { return summarizeTeamSeasonProfile(await teamData(teamId), teamId); },
   },
   {
     name: "get_team_availability",
-    description: "Return FotMob-reported injured players and expected return dates for a team.",
+    description: "List injured players and their reported return dates.",
     inputSchema: schema({ teamId: integer }, ["teamId"]),
     async run({ teamId }) { return summarizeAvailability(await teamData(teamId)); },
   },
   {
     name: "get_player_workload",
-    description: "Return recent match minutes, last-match time, and FotMob injury status for a player.",
+    description: "Get a player's recent minutes, last appearance, and injury status.",
     inputSchema: schema({ playerId: integer }, ["playerId"]),
     async run({ playerId }) { return summarizePlayerWorkload(await fotmobRequest(`/playerData?id=${positiveInteger(playerId, "playerId")}`)); },
   },
   {
     name: "get_goalkeeper_match_stats",
-    description: "Return goalkeeper saves, shots on target faced, save percentage, xGOT faced, and goals prevented for a match ID or FotMob URL.",
+    description: "Get saves, shots on target faced, save percentage, xGOT faced, and goals prevented. matchId may be an ID or FotMob URL.",
     inputSchema: schema({ matchId: matchReference }, ["matchId"]),
     async run({ matchId }) { return summarizeGoalkeepers(await matchDetails(matchId)); },
   },
   {
     name: "get_team_game_state_record",
-    description: "Return how a team finished recent matches after leading or trailing, using FotMob goal-event history.",
+    description: "Count recent wins, draws, and losses after a team led or trailed.",
     inputSchema: schema({ teamId: integer, limit }, ["teamId"]),
     async run({ teamId, limit: requestedLimit }) {
       const count = historyLimit(requestedLimit);
@@ -95,13 +95,13 @@ const tools = [
   },
   {
     name: "get_match_prediction_context",
-    description: "Return clock, events, lineups, momentum, form, head-to-head, weather, venue, and tournament context for a match ID or FotMob URL.",
+    description: "Get the clock, events, lineups, momentum, form, head-to-head, weather, venue, and competition. matchId may be an ID or FotMob URL.",
     inputSchema: schema({ matchId: matchReference }, ["matchId"]),
     async run({ matchId }) { return summarizePredictionContext(await matchDetails(matchId)); },
   },
   {
     name: "get_team_form",
-    description: "Return recent results, home/away splits, ranking, and available per-match xG.",
+    description: "Get recent results and home/away splits, with ranking and per-match xG when present.",
     inputSchema: schema({ teamId: integer, limit }, ["teamId"]),
     async run({ teamId, limit: requestedLimit }) {
       const count = historyLimit(requestedLimit);
@@ -116,7 +116,7 @@ const tools = [
   },
   {
     name: "get_match_stats",
-    description: "Return a score plus deduplicated team and active-player statistics for a match ID or FotMob URL.",
+    description: "Get the score plus deduplicated team and player stats. matchId may be an ID or FotMob URL.",
     inputSchema: schema({ matchId: matchReference }, ["matchId"]),
     async run({ matchId }) { return summarizeDetails(await matchDetails(matchId)); },
   },

@@ -1,25 +1,24 @@
-# FotMob MCP
+# FotMoCP
 
-A zero-dependency stdio MCP server that gives agents FotMob match, team, and player data for football analysis.
+I built FotMoCP so an MCP client can check live FotMob data before analyzing a football match. Its ten read-only tools cover match stats, team form, injuries, and player workload. It does not make predictions.
 
-## Requirements
+## What you need
 
 - Node.js 22 or newer
 - Internet access to `www.fotmob.com`
 
-## Build and run
+## Run it
 
-No package installation is required. The project uses only Node.js built-ins.
+FotMoCP only uses modules included with Node.js, so there is nothing to install from npm.
 
 ```bash
 npm run check
-npm run build
 npm start
 ```
 
-`npm run build` validates the JavaScript and copies the two runtime files into `dist/`. It does not install packages.
+`npm run check` runs the tests and builds `dist/`. Use `npm run build` when you only want to rebuild the runtime files.
 
-## MCP configuration
+## Add it to an MCP client
 
 ```json
 {
@@ -51,15 +50,17 @@ On Windows, use escaped backslashes:
 
 | Tool | Data returned |
 | --- | --- |
-| `search_fotmob(query)` | Compact team, player, league, and match IDs |
+| `search_fotmob(query)` | Team, player, league, and match IDs |
 | `find_matches(date)` | Match IDs and scores for `YYYY-MM-DD` |
-| `get_match_stats(matchId)` | Deduplicated team and active-player stats; accepts an ID or FotMob URL |
-| `get_match_prediction_context(matchId)` | Clock, events, lineups, momentum, form, venue, weather, and competition context; accepts an ID or FotMob URL |
+| `get_match_stats(matchId)` | Score, team stats, and player stats; accepts an ID or FotMob URL |
+| `get_match_prediction_context(matchId)` | Clock, events, lineups, momentum, form, venue, and weather; accepts an ID or FotMob URL |
 | `get_goalkeeper_match_stats(matchId)` | Saves, save percentage, xGOT faced, and goals prevented; accepts an ID or FotMob URL |
-| `get_team_form(teamId, limit?)` | Recent results, home/away splits, ranking, and available xG |
-| `get_team_season_profile(teamId)` | Table record, xG/xGA/xPoints, and FIFA ranking where available |
-| `get_team_availability(teamId)` | FotMob-reported injuries and expected returns |
+| `get_team_form(teamId, limit?)` | Recent results, home/away splits, ranking, and per-match xG |
+| `get_team_season_profile(teamId)` | Table record, xG, xGA, xPoints, and FIFA ranking |
+| `get_team_availability(teamId)` | Reported injuries and return dates |
 | `get_team_game_state_record(teamId, limit?)` | Results after leading or trailing |
 | `get_player_workload(playerId)` | Recent minutes, last match, and injury status |
 
-FotMob's endpoints are unofficial and may change. This server makes read-only requests and does not store FotMob data.
+## Limits
+
+FotMob does not document these site endpoints as a public API, so they may change without notice. FotMoCP only makes GET requests and does not cache or save responses.
