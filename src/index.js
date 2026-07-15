@@ -1,6 +1,7 @@
 import {
   expectedGoals,
   fotmobRequest,
+  parseMatchId,
   recentFixtures,
   summarizeAvailability,
   summarizeDetails,
@@ -9,11 +10,13 @@ import {
   summarizeMatch,
   summarizePlayerWorkload,
   summarizePredictionContext,
+  summarizeSearch,
   summarizeTeamForm,
   summarizeTeamSeasonProfile,
 } from "./fotmob.js";
 
 const integer = { type: "integer", minimum: 1 };
+const matchReference = { oneOf: [integer, { type: "string", minLength: 1 }] };
 const limit = { type: "integer", minimum: 5, maximum: 20, default: 10 };
 const schema = (properties, required) => ({ type: "object", properties, required, additionalProperties: false });
 
@@ -28,10 +31,19 @@ function historyLimit(value) {
   return value;
 }
 
-const matchDetails = (matchId) => fotmobRequest(`/matchDetails?matchId=${positiveInteger(matchId, "matchId")}`);
+const matchDetails = (matchId) => fotmobRequest(`/matchDetails?matchId=${parseMatchId(matchId)}`);
 const teamData = (teamId) => fotmobRequest(`/teams?id=${positiveInteger(teamId, "teamId")}`);
 
 const tools = [
+  {
+    name: "search_fotmob",
+    description: "Find compact FotMob team, player, league, and match IDs by name.",
+    inputSchema: schema({ query: { type: "string", minLength: 2 } }, ["query"]),
+    async run({ query }) {
+      if (typeof query !== "string" || query.trim().length < 2) throw new Error("query must contain at least 2 characters");
+      return summarizeSearch(await fotmobRequest(`/search/suggest?term=${encodeURIComponent(query.trim())}&hits=10&lang=en`));
+    },
+  },
   {
     name: "find_matches",
     description: "Find FotMob matches scheduled or played on a UTC date. Use this before match tools when you need a match ID.",
@@ -62,8 +74,8 @@ const tools = [
   },
   {
     name: "get_goalkeeper_match_stats",
-    description: "Return goalkeeper saves, shots on target faced, save percentage, xGOT faced, and goals prevented for a match.",
-    inputSchema: schema({ matchId: integer }, ["matchId"]),
+    description: "Return goalkeeper saves, shots on target faced, save percentage, xGOT faced, and goals prevented for a match ID or FotMob URL.",
+    inputSchema: schema({ matchId: matchReference }, ["matchId"]),
     async run({ matchId }) { return summarizeGoalkeepers(await matchDetails(matchId)); },
   },
   {
@@ -83,8 +95,8 @@ const tools = [
   },
   {
     name: "get_match_prediction_context",
-    description: "Return clock, events, lineups, momentum, form, head-to-head, weather, venue, and tournament context.",
-    inputSchema: schema({ matchId: integer }, ["matchId"]),
+    description: "Return clock, events, lineups, momentum, form, head-to-head, weather, venue, and tournament context for a match ID or FotMob URL.",
+    inputSchema: schema({ matchId: matchReference }, ["matchId"]),
     async run({ matchId }) { return summarizePredictionContext(await matchDetails(matchId)); },
   },
   {
@@ -104,8 +116,8 @@ const tools = [
   },
   {
     name: "get_match_stats",
-    description: "Return a match score plus deduplicated team and active-player statistics.",
-    inputSchema: schema({ matchId: integer }, ["matchId"]),
+    description: "Return a score plus deduplicated team and active-player statistics for a match ID or FotMob URL.",
+    inputSchema: schema({ matchId: matchReference }, ["matchId"]),
     async run({ matchId }) { return summarizeDetails(await matchDetails(matchId)); },
   },
 ];
@@ -153,7 +165,15 @@ process.stdin.on("data", (chunk) => {
   buffer = lines.pop() ?? "";
   for (const line of lines) {
     if (!line.trim()) continue;
-    queue = queue.then(() => handle(JSON.parse(line))).catch((cause) => {
+    queue = queue.then(() => {
+      let message;
+      try { message = JSON.parse(line); }
+      catch {
+        send({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } });
+        return;
+      }
+      return handle(message);
+    }).catch((cause) => {
       process.stderr.write(`${cause instanceof Error ? cause.message : String(cause)}\n`);
     });
   }

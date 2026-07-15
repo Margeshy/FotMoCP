@@ -7,6 +7,43 @@ async function fotmobRequest(path, fetcher = fetch) {
   if (!response.ok) throw new Error(`FotMob request failed with HTTP ${response.status}`);
   return response.json();
 }
+function parseMatchId(value) {
+  if (Number.isSafeInteger(value) && value > 0) return value;
+  if (typeof value !== "string") throw new Error("matchId must be a positive match ID or FotMob URL");
+  const input = value.trim();
+  if (/^\d+$/.test(input) && Number.isSafeInteger(Number(input)) && Number(input) > 0) return Number(input);
+  try {
+    const url = new URL(input);
+    if (url.hostname !== "fotmob.com" && !url.hostname.endsWith(".fotmob.com")) throw new Error();
+    const candidate = url.hash.slice(1) || url.searchParams.get("matchId");
+    if (/^\d+$/.test(candidate) && Number.isSafeInteger(Number(candidate)) && Number(candidate) > 0) return Number(candidate);
+  } catch {}
+  throw new Error("matchId must be a positive match ID or FotMob URL");
+}
+function numericId(value) {
+  return /^\d+$/.test(String(value)) ? Number(value) : value;
+}
+function summarizeSearch(data) {
+  const groups = Array.isArray(data) ? data : [];
+  const primary = groups.find((group) => group.title?.key === "all")?.suggestions;
+  const suggestions = primary ?? [...new Map(groups.flatMap((group) => group.suggestions ?? []).map((item) => [`${item.type}:${item.id}`, item])).values()];
+  return suggestions.slice(0, 10).map((item) => {
+    if (item.type === "match") return {
+      type: "match",
+      id: numericId(item.id),
+      competition: { id: numericId(item.leagueId), name: item.leagueName },
+      time: item.matchDate,
+      status: item.status?.finished ? "Finished" : item.status?.started ? "Live" : "Not started",
+      home: { id: numericId(item.homeTeamId), name: item.homeTeamName, score: item.homeTeamScore },
+      away: { id: numericId(item.awayTeamId), name: item.awayTeamName, score: item.awayTeamScore }
+    };
+    const result = { type: item.type, id: numericId(item.id), name: item.name };
+    if (item.type === "player") result.team = { id: numericId(item.teamId), name: item.teamName };
+    if (item.type === "team") result.competition = { id: numericId(item.leagueId), name: item.leagueName };
+    if (item.type === "league") result.countryCode = item.ccode;
+    return result;
+  });
+}
 function recentFixtures(team, limit) {
   return (team.fixtures?.allFixtures?.fixtures ?? []).filter((fixture) => fixture.status?.finished).sort((a, b) => Date.parse(b.status.utcTime) - Date.parse(a.status.utcTime)).slice(0, limit);
 }
@@ -358,6 +395,7 @@ function summarizeTeamSeasonProfile(data, teamId) {
 export {
   expectedGoals,
   fotmobRequest,
+  parseMatchId,
   recentFixtures,
   summarizeAvailability,
   summarizeDetails,
@@ -366,6 +404,7 @@ export {
   summarizeMatch,
   summarizePlayerWorkload,
   summarizePredictionContext,
+  summarizeSearch,
   summarizeTeamForm,
   summarizeTeamSeasonProfile
 };

@@ -51,10 +51,11 @@ On Windows, use escaped backslashes:
 
 | Tool | Data returned |
 | --- | --- |
+| `search_fotmob(query)` | Compact team, player, league, and match IDs |
 | `find_matches(date)` | Match IDs and scores for `YYYY-MM-DD` |
-| `get_match_stats(matchId)` | Deduplicated team and active-player stats |
-| `get_match_prediction_context(matchId)` | Clock, events, lineups, momentum, form, venue, weather, and competition context |
-| `get_goalkeeper_match_stats(matchId)` | Saves, save percentage, xGOT faced, and goals prevented |
+| `get_match_stats(matchId)` | Deduplicated team and active-player stats; accepts an ID or FotMob URL |
+| `get_match_prediction_context(matchId)` | Clock, events, lineups, momentum, form, venue, weather, and competition context; accepts an ID or FotMob URL |
+| `get_goalkeeper_match_stats(matchId)` | Saves, save percentage, xGOT faced, and goals prevented; accepts an ID or FotMob URL |
 | `get_team_form(teamId, limit?)` | Recent results, home/away splits, ranking, and available xG |
 | `get_team_season_profile(teamId)` | Table record, xG/xGA/xPoints, and FIFA ranking where available |
 | `get_team_availability(teamId)` | FotMob-reported injuries and expected returns |
