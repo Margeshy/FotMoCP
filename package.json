@@ -1,7 +1,7 @@
 {
   "name": "fotmob-mcp",
   "version": "0.1.0",
-  "description": "Lightweight FotMob match-data MCP server for football analysis agents",
+  "description": "FotMob data tools for MCP clients",
   "private": true,
   "type": "module",
   "engines": {

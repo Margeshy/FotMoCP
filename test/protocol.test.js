@@ -9,7 +9,7 @@ async function request(server, lines, message) {
   return JSON.parse((await once(lines, "line"))[0]);
 }
 
-test("MCP server handles discovery, errors, and notifications", async (t) => {
+test("stdio server follows MCP request and notification rules", async (t) => {
   const server = spawn(process.execPath, ["src/index.js"], { stdio: ["pipe", "pipe", "pipe"] });
   const lines = createInterface({ input: server.stdout });
   t.after(() => server.kill());

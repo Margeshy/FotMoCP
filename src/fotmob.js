@@ -79,7 +79,7 @@ function summarizeDetails(data) {
   };
 }
 function teamName(isHome, home, away) {
-  return isHome === true ? home : isHome === false ? away : void 0;
+  return isHome === true ? home : isHome === false ? away : undefined;
 }
 function summarizeLineup(team) {
   return {
@@ -100,19 +100,19 @@ function summarizeLineup(team) {
 function summarizeEvent(event, home, away) {
   return {
     minute: event.timeStr ?? event.time,
-    addedMinute: event.overloadTimeStr || void 0,
+    addedMinute: event.overloadTimeStr || undefined,
     type: event.type,
     team: teamName(event.isHome, home, away),
     player: event.player?.name ?? event.nameStr,
     assist: event.assistStr ?? event.assist?.name,
-    substitution: event.type === "Substitution" ? { out: event.swap?.[0]?.name, in: event.swap?.[1]?.name, injury: event.injuredPlayerOut === true } : void 0,
+    substitution: event.type === "Substitution" ? { out: event.swap?.[0]?.name, in: event.swap?.[1]?.name, injury: event.injuredPlayerOut === true } : undefined,
     card: event.card,
-    score: event.newScore ? `${event.newScore[0]}-${event.newScore[1]}` : event.homeScore === void 0 ? void 0 : `${event.homeScore}-${event.awayScore}`,
+    score: event.newScore ? `${event.newScore[0]}-${event.newScore[1]}` : event.homeScore === undefined ? undefined : `${event.homeScore}-${event.awayScore}`,
     detail: event.minutesAddedStr ?? event.halfStrShort
   };
 }
 function summarizeMomentum(data) {
-  const values = (data?.main?.data ?? []).filter((point) => point.value !== null && point.value !== void 0);
+  const values = (data?.main?.data ?? []).filter((point) => point.value !== null && point.value !== undefined);
   const latestMinute = values.at(-1)?.minute;
   const window = (minutes) => {
     const points = values.filter((point) => point.minute > (latestMinute ?? 0) - minutes);
@@ -240,7 +240,7 @@ function summarizeFixture(fixture, teamId, xg) {
     xgAgainst: isHome ? xg?.away : xg?.home
   };
 }
-function summarizeTeamForm(data, teamId, limit, xgByMatchId = /* @__PURE__ */ new Map()) {
+function summarizeTeamForm(data, teamId, limit, xgByMatchId = new Map()) {
   const fixtures = (data.fixtures?.allFixtures?.fixtures ?? []).filter((fixture) => fixture.status?.finished).sort((a, b) => Date.parse(b.status.utcTime) - Date.parse(a.status.utcTime)).slice(0, limit).map((fixture) => summarizeFixture(fixture, teamId, xgByMatchId.get(fixture.id)));
   const record = (matches) => ({
     played: matches.length,
@@ -379,7 +379,7 @@ function summarizeTeamSeasonProfile(data, teamId) {
       expectedPerformance: expected ? {
         xg: expected.xg,
         xgConceded: expected.xgConceded,
-        expectedGoalDifference: expected.xg === void 0 || expected.xgConceded === void 0 ? void 0 : expected.xg - expected.xgConceded,
+        expectedGoalDifference: expected.xg === undefined || expected.xgConceded === undefined ? undefined : expected.xg - expected.xgConceded,
         goalsVsXg: expected.xgDiff,
         goalsConcededVsXga: expected.xgConcededDiff,
         expectedPoints: expected.xPoints,
