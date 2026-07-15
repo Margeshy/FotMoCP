@@ -4,7 +4,7 @@ A zero-dependency stdio MCP server that gives agents FotMob match, team, and pla
 
 ## Requirements
 
-- Node.js 20 or newer
+- Node.js 22 or newer
 - Internet access to `www.fotmob.com`
 
 ## Build and run

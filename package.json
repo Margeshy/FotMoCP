@@ -5,7 +5,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "build": "node --check src/fotmob.js && node --check src/index.js && node scripts/build.mjs",
