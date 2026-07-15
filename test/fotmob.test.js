@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fotmobRequest, summarizeAvailability, summarizeDetails, summarizeGameStateRecords, summarizeGoalkeepers, summarizeMatch, summarizePlayerWorkload, summarizePredictionContext, summarizeTeamForm, summarizeTeamSeasonProfile } from "../src/fotmob.js";
+import { fotmobRequest, parseMatchId, summarizeAvailability, summarizeDetails, summarizeGameStateRecords, summarizeGoalkeepers, summarizeMatch, summarizePlayerWorkload, summarizePredictionContext, summarizeSearch, summarizeTeamForm, summarizeTeamSeasonProfile } from "../src/fotmob.js";
 test("fotmobRequest throws useful HTTP errors", async () => {
   await assert.rejects(() => fotmobRequest("/bad", async () => ({ ok: false, status: 404, json: async () => ({}) })), /HTTP 404/);
 });
@@ -51,4 +51,20 @@ test("summarizeDetails keeps current FotMob stats agent-readable", () => {
   });
   assert.equal(result.stats[0].home, "60%");
   assert.equal(result.playerStats[0].stats.Goals, 1);
+});
+test("parseMatchId accepts positive IDs and FotMob URLs", () => {
+  assert.equal(parseMatchId(42), 42);
+  assert.equal(parseMatchId("https://www.fotmob.com/en-GB/matches/a-vs-b/test#4653711"), 4653711);
+  assert.equal(parseMatchId("https://www.fotmob.com/matchDetails?matchId=4653712"), 4653712);
+  assert.throws(() => parseMatchId("https://example.com/match#4653711"), /positive match ID or FotMob URL/);
+});
+test("summarizeSearch returns compact entity and match IDs", () => {
+  const result = summarizeSearch([{ title: { key: "all" }, suggestions: [
+    { type: "team", id: "9825", name: "Arsenal", leagueId: 47, leagueName: "Premier League" },
+    { type: "player", id: "30981", name: "Lionel Messi", teamId: 960720, teamName: "Inter Miami CF" },
+    { type: "match", id: "5874664", leagueId: 489, leagueName: "Club Friendlies", matchDate: "2026-08-01T17:00:00Z", homeTeamId: "7732", homeTeamName: "Girona", awayTeamId: "9825", awayTeamName: "Arsenal", status: { finished: false } }
+  ] }]);
+  assert.deepEqual(result[0], { type: "team", id: 9825, name: "Arsenal", competition: { id: 47, name: "Premier League" } });
+  assert.equal(result[1].team.id, 960720);
+  assert.equal(result[2].away.id, 9825);
 });
